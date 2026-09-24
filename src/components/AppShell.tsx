@@ -22,7 +22,7 @@ type Item = Leaf | Group;
 
 /** Đường dẫn chỉ leader (khách chủ tài khoản) thấy trong menu — nhân sự vẫn dùng
  * phần còn lại đầy đủ như leader (dữ liệu Zalo đã tự lọc theo tài khoản được cấp ở API). */
-const LEADER_ONLY_HREFS = new Set(["/accounts/access"]);
+const LEADER_ONLY_HREFS = new Set(["/accounts/access", "/reports"]);
 
 function filterNavForRole(items: Item[], isLeader: boolean): Item[] {
   if (isLeader) return items;
@@ -36,6 +36,7 @@ function filterNavForRole(items: Item[], isLeader: boolean): Item[] {
 }
 
 const NAV: Item[] = [
+  { label: "Báo cáo", href: "/reports", icon: "dashboard" },
   { label: "Quản lý proxy", href: "/proxies", icon: "globe" },
   {
     label: "Zalo",

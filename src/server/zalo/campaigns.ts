@@ -19,6 +19,7 @@ type CampaignRow = {
   targets: string[];
   sentOk: number;
   sentFail: number;
+  createdBy: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -41,6 +42,7 @@ function rowToCampaign(r: CampaignRow): Campaign {
     targets: r.targets,
     sentOk: r.sentOk,
     sentFail: r.sentFail,
+    createdBy: r.createdBy ?? "",
     createdAt: r.createdAt,
     updatedAt: r.updatedAt,
   };
@@ -62,6 +64,7 @@ export async function createCampaign(input: {
   config: Partial<CampaignConfig>;
   accountIds: string[];
   targets: string[];
+  createdBy: string;
 }): Promise<Campaign> {
   const row = await be<CampaignRow>(
     "",
@@ -73,6 +76,7 @@ export async function createCampaign(input: {
         config: JSON.stringify({ ...DEFAULT_CONFIG, ...input.config }),
         accountIds: input.accountIds,
         targets: input.targets,
+        createdBy: input.createdBy,
       },
     },
     "/campaigns",

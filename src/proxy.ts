@@ -10,7 +10,7 @@ const PUBLIC = ["/", "/login", "/api/auth/login", "/api/auth/logout", "/api/lead
  * nơi liệt kê/tác động tài khoản Zalo tự lọc theo `allowedZaloIds` (xem
  * withAccount() trong server/zalo/http.ts + các route dùng zaloId trực tiếp).
  */
-const OWNER_ONLY_PREFIXES = ["/accounts/access", "/api/employees"];
+const OWNER_ONLY_PREFIXES = ["/accounts/access", "/api/employees", "/reports"];
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;

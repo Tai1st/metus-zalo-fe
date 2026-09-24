@@ -151,6 +151,7 @@ export type Campaign = {
   targets: string[];
   sentOk: number;
   sentFail: number;
+  createdBy: string;
   createdAt: string;
   updatedAt: string;
 };

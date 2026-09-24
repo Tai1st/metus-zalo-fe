@@ -67,6 +67,7 @@ export async function POST(req: NextRequest) {
     config: (body.config ?? {}) as never,
     accountIds,
     targets,
+    createdBy: user.id,
   });
   return ok(campaign, { status: 201 });
 }

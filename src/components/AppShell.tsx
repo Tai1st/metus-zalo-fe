@@ -167,14 +167,9 @@ const NAV: Item[] = [
         href: "/friend-invites",
         icon: "mail",
       },
-      { label: "Remote Browser", href: "/remote-browser", icon: "monitor" },
       { label: "Backup bạn bè", href: "/backup-friends", icon: "cloud" },
-      { label: "Chức năng khác", href: "/misc", icon: "grid" },
     ],
   },
-  { label: "Email", href: "/email", icon: "mail" },
-  { label: "Facebook", href: "/facebook", icon: "facebook" },
-  { label: "Thu thập dữ liệu", href: "/data-collection", icon: "download" },
 ];
 
 const isGroup = (item: Item): item is Group => "children" in item;

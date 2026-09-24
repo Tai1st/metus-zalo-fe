@@ -206,6 +206,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </span>
         </div>
         <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+          <PlanBadge />
           <NotificationsBell />
           <div className="mx-1 h-6 w-px bg-white/20 sm:mx-1.5" />
           <HeaderUser />
@@ -234,6 +235,33 @@ export function AppShell({ children }: { children: ReactNode }) {
         </main>
       </div>
     </div>
+  );
+}
+
+function PlanBadge() {
+  const { data } = useApi<{ planName: string; expiresAt: string | null } | null>(
+    "/api/subscription",
+  );
+  if (!data) return null;
+  const days = data.expiresAt
+    ? Math.ceil((new Date(data.expiresAt).getTime() - Date.now()) / 86_400_000)
+    : null;
+  const urgent = days !== null && days <= 7;
+  return (
+    <span
+      className={`mr-1 hidden max-w-64 truncate text-xs font-semibold sm:inline sm:text-sm ${
+        urgent ? "text-red-200" : "text-yellow-200"
+      }`}
+      title={
+        data.expiresAt
+          ? `Hết hạn ${new Date(data.expiresAt).toLocaleDateString("vi-VN")}`
+          : undefined
+      }
+    >
+      Gói {data.planName}
+      {days !== null &&
+        (days > 0 ? ` · còn ${days} ngày` : " · đã hết hạn")}
+    </span>
   );
 }
 

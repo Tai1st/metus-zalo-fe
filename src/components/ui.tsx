@@ -155,7 +155,35 @@ export function Input({ className = "", invalid, ...props }: InputProps) {
   );
 }
 
-type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
+export function PasswordInput({
+  className = "",
+  inputClassName = inputCls,
+  ...props
+}: Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> & {
+  inputClassName?: string;
+}) {
+  const [show, setShow] = useState(false);
+  return (
+    <span className={`relative block ${className}`}>
+      <input
+        {...props}
+        type={show ? "text" : "password"}
+        className={`${inputClassName} pr-9`}
+      />
+      <button
+        type="button"
+        tabIndex={-1}
+        onClick={() => setShow((v) => !v)}
+        className={`absolute right-2.5 top-1/2 -translate-y-1/2 hover:text-foreground ${show ? "text-zalo" : "text-muted"}`}
+        aria-label="Hiện / ẩn mật khẩu"
+      >
+        <Icon name="eye" size={16} />
+      </button>
+    </span>
+  );
+}
+
+type TextareaProps =React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
   invalid?: boolean;
 };
 export function Textarea({ className = "", invalid, ...props }: TextareaProps) {

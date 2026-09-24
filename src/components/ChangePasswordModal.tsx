@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { apiSend } from "@/lib/fetcher";
-import { Button, Input, Modal, Notice } from "@/components/ui";
+import { Button, Modal, Notice, PasswordInput } from "@/components/ui";
 
 export function ChangePasswordModal({ onClose }: { onClose: () => void }) {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -44,9 +44,8 @@ export function ChangePasswordModal({ onClose }: { onClose: () => void }) {
         <form onSubmit={submit} className="flex flex-col gap-4">
           <label className="text-sm">
             <span className="text-danger">*</span> Mật khẩu hiện tại
-            <Input
+            <PasswordInput
               className="mt-1"
-              type="password"
               autoComplete="current-password"
               autoFocus
               value={currentPassword}
@@ -55,9 +54,8 @@ export function ChangePasswordModal({ onClose }: { onClose: () => void }) {
           </label>
           <label className="text-sm">
             <span className="text-danger">*</span> Mật khẩu mới
-            <Input
+            <PasswordInput
               className="mt-1"
-              type="password"
               autoComplete="new-password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
@@ -65,9 +63,8 @@ export function ChangePasswordModal({ onClose }: { onClose: () => void }) {
           </label>
           <label className="text-sm">
             <span className="text-danger">*</span> Nhập lại mật khẩu mới
-            <Input
+            <PasswordInput
               className="mt-1"
-              type="password"
               autoComplete="new-password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}

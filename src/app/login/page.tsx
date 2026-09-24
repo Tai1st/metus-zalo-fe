@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, type SyntheticEvent } from "react";
 import { BrandMark } from "@/components/BrandMark";
+import { PasswordInput } from "@/components/ui";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -69,13 +70,12 @@ export default function LoginPage() {
           </label>
           <label className="block">
             <span className="mb-1.5 block text-sm font-semibold">Mật khẩu</span>
-            <input
-              type="password"
+            <PasswordInput
+              inputClassName={input}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
               required
-              className={input}
             />
           </label>
           {error && <p className="text-sm font-medium text-danger">{error}</p>}

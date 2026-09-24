@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { apiSend } from "@/lib/fetcher";
-import { Button, Input, Modal, Notice } from "@/components/ui";
+import { Button, Modal, Notice, PasswordInput } from "@/components/ui";
 
 export function ResetEmployeePasswordModal({
   employeeId,
@@ -47,9 +47,8 @@ export function ResetEmployeePasswordModal({
         <div className="flex flex-col gap-4">
           <label className="text-sm">
             <span className="text-danger">*</span> Mật khẩu mới
-            <Input
+            <PasswordInput
               className="mt-1"
-              type="password"
               autoFocus
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}

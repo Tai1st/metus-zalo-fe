@@ -154,7 +154,8 @@ export default async function Landing() {
           </nav>
           <div className="flex items-center gap-5">
             <Link href="/login" className="hidden text-sm font-medium text-[#1f2a44] sm:block">Đăng nhập</Link>
-            <Btn href={"#trial"} className="px-5 py-2.5">Dùng thử ngay <Icon d={I.arrow} size={14} /></Btn>
+            <span className="sm:hidden"><Btn href="/login" className="px-5 py-2.5">Đăng nhập</Btn></span>
+            <span className="hidden sm:block"><Btn href={"#trial"} className="px-5 py-2.5">Dùng thử ngay <Icon d={I.arrow} size={14} /></Btn></span>
           </div>
         </header>
       </div>

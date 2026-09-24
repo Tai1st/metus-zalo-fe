@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { fail, ok } from "@/server/zalo/http";
 import { SESSION_COOKIE, getSessionUser } from "@/lib/auth";
+import { checkIpv4Proxy } from "@/server/zalo/proxyAgent";
 import {
   deleteProxy,
   listProxies,
@@ -37,6 +38,10 @@ export async function PUT(
   }
   const parsed = parseProxyBody(body);
   if (typeof parsed === "string") return fail(parsed);
+  if (parsed.isActive) {
+    const check = await checkIpv4Proxy(parsed);
+    if (!check.ok) return fail(check.error);
+  }
   const updated = await updateProxy(Number(id), parsed);
   if (!updated) return fail("Không tìm thấy proxy", 404);
   return ok(updated);

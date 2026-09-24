@@ -8,6 +8,7 @@ import { BrandMark } from "@/components/BrandMark";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { ChangePasswordModal } from "@/components/ChangePasswordModal";
 import { useApi } from "@/hooks/useApi";
+import { Toaster } from "@/components/Toaster";
 
 type Leaf = { label: string; href: string; icon?: IconName };
 type Group = {
@@ -18,17 +19,17 @@ type Group = {
 };
 type Item = Leaf | Group;
 
-/** Đường dẫn chỉ admin mới thấy trong menu — nhân sự vẫn dùng phần còn lại
- * đầy đủ như admin (dữ liệu Zalo đã tự lọc theo tài khoản được cấp ở API). */
-const ADMIN_ONLY_HREFS = new Set(["/accounts/access"]);
+/** Đường dẫn chỉ leader (khách chủ tài khoản) thấy trong menu — nhân sự vẫn dùng
+ * phần còn lại đầy đủ như leader (dữ liệu Zalo đã tự lọc theo tài khoản được cấp ở API). */
+const LEADER_ONLY_HREFS = new Set(["/accounts/access"]);
 
-function filterNavForRole(items: Item[], isAdmin: boolean): Item[] {
-  if (isAdmin) return items;
+function filterNavForRole(items: Item[], isLeader: boolean): Item[] {
+  if (isLeader) return items;
   return items
-    .filter((item) => !("href" in item) || !ADMIN_ONLY_HREFS.has(item.href))
+    .filter((item) => !("href" in item) || !LEADER_ONLY_HREFS.has(item.href))
     .map((item) =>
       isGroup(item)
-        ? { ...item, children: filterNavForRole(item.children, isAdmin) }
+        ? { ...item, children: filterNavForRole(item.children, isLeader) }
         : item,
     );
 }
@@ -187,6 +188,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   if (pathname === "/" || pathname === "/login") return <>{children}</>;
   return (
     <div className="flex min-h-screen flex-col">
+      <Toaster />
       <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-2 bg-linear-to-r from-zalo to-zalo-dark px-3 text-white shadow-md shadow-zalo/15 sm:h-16 sm:px-5">
         <div className="flex min-w-0 items-center gap-2.5">
           <button
@@ -348,9 +350,9 @@ function SidebarNav() {
   const pathname = usePathname();
   const search = useSearchParams().toString();
   const { data } = useApi<{ role: string }>("/api/auth/me");
-  // Chỉ ẩn "Quản lý truy cập" khi đã BIẾT chắc không phải admin — tránh nháy
+  // Chỉ ẩn "Quản lý truy cập" khi đã BIẾT chắc là nhân sự — tránh nháy
   // menu đầy đủ→rút gọn khi đang tải; chặn thật vẫn ở proxy.ts.
-  const nav = filterNavForRole(NAV, !data || data.role === "admin");
+  const nav = filterNavForRole(NAV, !data || data.role !== "staff");
   return (
     <nav className="flex flex-col gap-0.5">
       {nav.map((item) => (

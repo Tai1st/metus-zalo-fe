@@ -46,7 +46,8 @@ export async function proxiesVisibleTo(user: SessionUser): Promise<Proxy[]> {
       .filter((a) => allowed.has(a.zaloId) && a.proxyId != null)
       .map((a) => a.proxyId as number),
   );
-  return all.filter((p) => p.ownerId === user.id || inUse.has(p.id));
+  const owner = user.ownerId || user.id;
+  return all.filter((p) => p.ownerId === owner || inUse.has(p.id));
 }
 
 export async function updateProxy(

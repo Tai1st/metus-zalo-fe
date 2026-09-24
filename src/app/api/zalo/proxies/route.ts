@@ -26,5 +26,5 @@ export async function POST(req: NextRequest) {
   }
   const parsed = parseProxyBody(body);
   if (typeof parsed === "string") return fail(parsed);
-  return ok(await createProxy(parsed, user.id), { status: 201 });
+  return ok(await createProxy(parsed, user.ownerId || user.id), { status: 201 });
 }

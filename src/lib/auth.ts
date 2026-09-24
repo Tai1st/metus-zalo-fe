@@ -66,6 +66,8 @@ export type SessionUser = {
    * cập"); everything here checks `=== "admin"`, so "user"/"staff" both fall
    * into the restricted branch without needing special-casing "staff". */
   role: "admin" | "user" | "staff";
+  /** Staff only: id of the leader (customer) that owns this employee. */
+  ownerId?: string;
   /** Zalo account ids this user may use — meaningless for role "admin" (full access). */
   allowedZaloIds: string[];
 };

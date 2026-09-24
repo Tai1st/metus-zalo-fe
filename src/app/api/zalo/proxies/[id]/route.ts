@@ -16,7 +16,7 @@ async function canManage(req: Request, id: number) {
   const user = await getSessionUser(cookie);
   if (!user) return { error: fail("Chưa đăng nhập", 401) };
   const p = (await listProxies()).find((x) => x.id === id);
-  if (!p || p.ownerId !== user.id) {
+  if (!p || p.ownerId !== (user.ownerId || user.id)) {
     return { error: fail("Không tìm thấy proxy", 404) };
   }
   return {};

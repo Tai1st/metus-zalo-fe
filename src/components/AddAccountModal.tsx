@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useApi } from "@/hooks/useApi";
 import { apiSend } from "@/lib/fetcher";
+import { toast } from "@/lib/toast";
 import {
   Button,
   Modal,
@@ -88,6 +90,16 @@ function ProxyPicker({
 }) {
   const { data: proxies, loading } = useApi<Proxy[]>("/api/zalo/proxies");
   const { data: accounts } = useApi<AccountPublic[]>("/api/zalo/accounts");
+  const router = useRouter();
+  const noProxy = !!proxies && proxies.length === 0;
+
+  useEffect(() => {
+    if (!noProxy) return;
+    toast("Bạn cần thêm proxy trước khi link tài khoản Zalo", "error");
+    onClose();
+    router.push("/proxies");
+  }, [noProxy, onClose, router]);
+
   const accountByProxy = new Map(
     (accounts ?? [])
       .filter((a) => a.proxyId !== null)

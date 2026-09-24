@@ -18,6 +18,9 @@ const ic = (d: string) => (
   </svg>
 );
 
+const capitalizeWords = (v: string) =>
+  v.replace(/(^|\s)(\S)/gu, (_, sp: string, c: string) => sp + c.toLocaleUpperCase("vi"));
+
 function Field({ label, icon, children, optional }: { label: string; icon: ReactNode; children: ReactNode; optional?: boolean }) {
   return (
     <label className="block">
@@ -88,6 +91,11 @@ export function LeadModal() {
     setBusy(true);
     setError("");
     try {
+      if (!/^0\d{9}$/.test(phone)) {
+        setError("Số điện thoại phải đủ 10 số và bắt đầu bằng số 0");
+        setBusy(false);
+        return;
+      }
       const res = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -137,10 +145,10 @@ export function LeadModal() {
         ) : (
           <form onSubmit={submit} className="space-y-5 px-8 pb-7 pt-7">
             <Field label="Họ và tên" icon={ic("M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8m-8 9c0-4 4-6 8-6s8 2 8 6")}>
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nguyễn Văn A" maxLength={100} required className={input} />
+              <input value={name} onChange={(e) => setName(capitalizeWords(e.target.value))} placeholder="Nguyễn Văn A" maxLength={100} required className={input} />
             </Field>
             <Field label="Số điện thoại" icon={ic("M6 3h3l2 5-2 1a11 11 0 0 0 6 6l1-2 5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 4 5a2 2 0 0 1 2-2")}>
-              <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0912 345 678" inputMode="tel" required className={input} />
+              <input value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} placeholder="0912345678" inputMode="numeric" maxLength={10} pattern="0[0-9]{9}" title="Số điện thoại gồm 10 số, bắt đầu bằng số 0" required className={input} />
             </Field>
             <Field label="Quy mô kinh doanh" icon={ic("M5 21V4h9v17M14 9h5v12M8 8h3M8 12h3M8 16h3")}>
               <select value={scale} onChange={(e) => setScale(e.target.value)} required className={`h-13 w-full bg-transparent text-[15px] outline-none ${scale ? "text-[#0b1220]" : "text-[#5b6577]"}`}>

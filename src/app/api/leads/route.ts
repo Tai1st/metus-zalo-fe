@@ -21,7 +21,9 @@ export async function POST(req: NextRequest) {
   const scale = body.scale ?? "";
   const referrer = (body.referrer ?? "").trim();
   if (!fullName || fullName.length > 100) return bad("Vui lòng nhập họ và tên");
-  if (!/^(0|\+84)\d{9}$/.test(phone)) return bad("Số điện thoại không hợp lệ");
+  if (!/^0\d{9}$/.test(phone)) {
+    return bad("Số điện thoại phải đủ 10 số và bắt đầu bằng số 0");
+  }
   if (referrer.length > 100) return bad("Người giới thiệu quá dài");
   if (!SCALES.includes(scale)) return bad("Vui lòng chọn quy mô kinh doanh");
 

@@ -1,0 +1,26 @@
+name: Deploy FE
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH and deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          port: ${{ secrets.VPS_PORT }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /var/www/metus-zalo-fe
+            cp -r .next .next.backup 2>/dev/null || true
+            git pull origin main
+            npm ci
+            npm run build || (mv .next.backup .next && pm2 restart metus-zalo-web && exit 1)
+            pm2 reload metus-zalo-web
+            pm2 save
+            echo "✅ Deploy FE completed successfully!"

@@ -1,8 +1,11 @@
 import "server-only";
 import { be, isNotFound } from "./be-client";
+import { listAccounts } from "./accounts";
+import type { SessionUser } from "@/lib/auth";
 
 export type Proxy = {
   id: number;
+  ownerId: string;
   label: string;
   protocol: "http" | "socks5";
   host: string;
@@ -27,8 +30,23 @@ export type ProxyInput = {
   isActive: boolean;
 };
 
-export function createProxy(input: ProxyInput): Promise<Proxy> {
-  return be<Proxy>("/proxies", { method: "POST", body: input });
+export function createProxy(input: ProxyInput, ownerId: string): Promise<Proxy> {
+  return be<Proxy>("/proxies", { method: "POST", body: { ...input, ownerId } });
+}
+
+/**
+ * Proxies a user may see: the ones they created plus whichever their allowed
+ * Zalo accounts already run through.
+ */
+export async function proxiesVisibleTo(user: SessionUser): Promise<Proxy[]> {
+  const all = await listProxies();
+  const allowed = new Set(user.allowedZaloIds);
+  const inUse = new Set(
+    (await listAccounts())
+      .filter((a) => allowed.has(a.zaloId) && a.proxyId != null)
+      .map((a) => a.proxyId as number),
+  );
+  return all.filter((p) => p.ownerId === user.id || inUse.has(p.id));
 }
 
 export async function updateProxy(

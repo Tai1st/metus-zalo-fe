@@ -18,11 +18,11 @@ const ic = (d: string) => (
   </svg>
 );
 
-function Field({ label, icon, children }: { label: string; icon: ReactNode; children: ReactNode }) {
+function Field({ label, icon, children, optional }: { label: string; icon: ReactNode; children: ReactNode; optional?: boolean }) {
   return (
     <label className="block">
       <span className="mb-2 block text-sm font-bold text-[#0b1220]">
-        {label} <span className="text-red-500">*</span>
+        {label} {optional ? <span className="font-normal text-[#8a97b1]">(không bắt buộc)</span> : <span className="text-red-500">*</span>}
       </span>
       <span className="flex items-center gap-3 rounded-2xl border border-[#e3e8f2] bg-white px-4 text-[#8a97b1] focus-within:border-[#2563eb] focus-within:ring-4 focus-within:ring-[#2563eb]/10">
         {icon}
@@ -37,6 +37,7 @@ export function LeadModal() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [scale, setScale] = useState("");
+  const [referrer, setReferrer] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
@@ -90,7 +91,7 @@ export function LeadModal() {
       const res = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullName: name, phone, scale }),
+        body: JSON.stringify({ fullName: name, phone, scale, referrer }),
       });
       const json = await res.json();
       if (!json.ok) throw new Error(json.error);
@@ -98,6 +99,7 @@ export function LeadModal() {
       setName("");
       setPhone("");
       setScale("");
+      setReferrer("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Có lỗi xảy ra, vui lòng thử lại");
     } finally {
@@ -147,6 +149,9 @@ export function LeadModal() {
                   <option key={v} value={v}>{l}</option>
                 ))}
               </select>
+            </Field>
+            <Field label="Người giới thiệu" optional icon={ic("M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M9.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m7 9v-1a4 4 0 0 0-3-3.9M15 4.2a3.5 3.5 0 0 1 0 6.6")}>
+              <input value={referrer} onChange={(e) => setReferrer(e.target.value)} placeholder="Tên hoặc SĐT người giới thiệu" maxLength={100} className={input} />
             </Field>
             {error && <p className="text-sm font-medium text-red-600">{error}</p>}
             <button

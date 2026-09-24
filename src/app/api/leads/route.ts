@@ -10,7 +10,7 @@ function bad(error: string) {
 }
 
 export async function POST(req: NextRequest) {
-  let body: { fullName?: string; phone?: string; scale?: string };
+  let body: { fullName?: string; phone?: string; scale?: string; referrer?: string };
   try {
     body = await req.json();
   } catch {
@@ -19,12 +19,14 @@ export async function POST(req: NextRequest) {
   const fullName = body.fullName?.trim() ?? "";
   const phone = (body.phone ?? "").replace(/[\s.-]/g, "");
   const scale = body.scale ?? "";
+  const referrer = (body.referrer ?? "").trim();
   if (!fullName || fullName.length > 100) return bad("Vui lòng nhập họ và tên");
   if (!/^(0|\+84)\d{9}$/.test(phone)) return bad("Số điện thoại không hợp lệ");
+  if (referrer.length > 100) return bad("Người giới thiệu quá dài");
   if (!SCALES.includes(scale)) return bad("Vui lòng chọn quy mô kinh doanh");
 
   try {
-    await be("", { method: "POST", body: { fullName, phone, scale } }, "/leads");
+    await be("", { method: "POST", body: { fullName, phone, scale, referrer } }, "/leads");
   } catch (e) {
     const status = e instanceof BeHttpError ? e.status : 502;
     return NextResponse.json(

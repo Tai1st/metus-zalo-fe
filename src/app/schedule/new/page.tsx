@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { DateInput } from "@/components/DateTimePicker";
 import { useApi } from "@/hooks/useApi";
 import { apiGet, apiSend } from "@/lib/fetcher";
 import {
@@ -262,21 +263,15 @@ function NewScheduleForm() {
             )}
 
             <Field label="Ngày bắt đầu" required>
-              <input
-                type="date"
-                className={`${inputCls} w-56`}
-                value={form.fromDate}
-                onChange={(e) => set("fromDate", e.target.value)}
-              />
+              <div className="w-56">
+                <DateInput value={form.fromDate} onChange={(v) => set("fromDate", v)} />
+              </div>
             </Field>
 
             <Field label="Ngày kết thúc">
-              <input
-                type="date"
-                className={`${inputCls} w-56`}
-                value={form.toDate}
-                onChange={(e) => set("toDate", e.target.value)}
-              />
+              <div className="w-56">
+                <DateInput value={form.toDate} onChange={(v) => set("toDate", v)} />
+              </div>
             </Field>
 
             <Field label="Tùy chọn gửi">

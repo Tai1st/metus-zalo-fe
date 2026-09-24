@@ -9,6 +9,7 @@ import { NotificationsBell } from "@/components/NotificationsBell";
 import { ChangePasswordModal } from "@/components/ChangePasswordModal";
 import { useApi } from "@/hooks/useApi";
 import { Toaster } from "@/components/Toaster";
+import { NoticeModal } from "@/components/NoticeModal";
 
 type Leaf = { label: string; href: string; icon?: IconName };
 type Group = {
@@ -189,6 +190,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
       <Toaster />
+      <NoticeModal />
       <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-2 bg-linear-to-r from-zalo to-zalo-dark px-3 text-white shadow-md shadow-zalo/15 sm:h-16 sm:px-5">
         <div className="flex min-w-0 items-center gap-2.5">
           <button

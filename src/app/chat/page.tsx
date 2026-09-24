@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useApi } from "@/hooks/useApi";
 import { useMessageStream } from "@/hooks/useMessageStream";
@@ -43,6 +43,14 @@ type FriendStatus = {
 };
 
 export default function ChatPage() {
+  return (
+    <Suspense fallback={null}>
+      <ChatPageInner />
+    </Suspense>
+  );
+}
+
+function ChatPageInner() {
   const [account, setAccount] = useState("");
   const [tab, setTab] = useState<"user" | "group">("user");
   const [search, setSearch] = useState("");

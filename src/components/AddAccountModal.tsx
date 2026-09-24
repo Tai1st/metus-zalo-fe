@@ -1,15 +1,39 @@
 "use client";
 
 import { useState } from "react";
+import { useApi } from "@/hooks/useApi";
 import { apiSend } from "@/lib/fetcher";
-import { Button, Modal, Notice, Textarea, inputCls } from "@/components/ui";
+import {
+  Button,
+  Modal,
+  Notice,
+  Table,
+  TableEmpty,
+  Td,
+  Th,
+  Thead,
+  Textarea,
+  Tr,
+  inputCls,
+} from "@/components/ui";
 import { QrLoginPanel } from "@/components/QrLoginPanel";
+import type { AccountPublic } from "@/lib/types";
+
+type Proxy = {
+  id: number;
+  host: string;
+  port: number;
+  username: string;
+};
 
 /**
  * Same UI for both "Thêm tài khoản" (new account) and "Đăng nhập lại" (an
  * existing account whose session died) — the server links/upserts by the
  * zaloId baked into the cookie or the QR-scanned session either way, so the
  * only thing that differs between the two call sites is the modal title.
+ *
+ * Bắt buộc chọn 1 proxy trước khi được vào bước nhập cookie/quét QR — tài
+ * khoản Zalo luôn phải đi qua proxy ngay từ lần đăng nhập đầu tiên.
  */
 export function AddAccountModal({
   title = "Link Account",
@@ -23,11 +47,21 @@ export function AddAccountModal({
   onAdded: () => void;
 }) {
   const [mode, setMode] = useState<"manual" | "qr">("manual");
+  const [proxyId, setProxyId] = useState<number | null>(null);
+
+  if (proxyId === null) {
+    return (
+      <Modal open onClose={onClose} size="lg" title="Chọn proxy để link tài khoản Zalo">
+        <ProxyPicker onClose={onClose} onPick={setProxyId} />
+      </Modal>
+    );
+  }
 
   return (
     <Modal open onClose={onClose} size="lg" title={title}>
       {mode === "manual" ? (
         <ManualForm
+          proxyId={proxyId}
           submitLabel={submitLabel}
           onSwitchQr={() => setMode("qr")}
           onClose={onClose}
@@ -35,6 +69,7 @@ export function AddAccountModal({
         />
       ) : (
         <QrForm
+          proxyId={proxyId}
           onSwitchManual={() => setMode("manual")}
           onClose={onClose}
           onAdded={onAdded}
@@ -44,12 +79,96 @@ export function AddAccountModal({
   );
 }
 
+function ProxyPicker({
+  onClose,
+  onPick,
+}: {
+  onClose: () => void;
+  onPick: (proxyId: number) => void;
+}) {
+  const { data: proxies, loading } = useApi<Proxy[]>("/api/zalo/proxies");
+  const { data: accounts } = useApi<AccountPublic[]>("/api/zalo/accounts");
+  const accountByProxy = new Map(
+    (accounts ?? [])
+      .filter((a) => a.proxyId !== null)
+      .map((a) => [a.proxyId as number, a]),
+  );
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Table minWidth={560}>
+        <Thead>
+          <Th>Host</Th>
+          <Th>Port</Th>
+          <Th>Username</Th>
+          <Th>Nick Zalo</Th>
+          <Th>Thao tác</Th>
+        </Thead>
+        <tbody>
+          {(proxies ?? []).map((p) => {
+            const acc = accountByProxy.get(p.id);
+            return (
+              <Tr key={p.id}>
+                <Td>{p.host}</Td>
+                <Td>{p.port}</Td>
+                <Td>{p.username || "—"}</Td>
+                <Td>
+                  {acc ? (
+                    <span className="flex items-center gap-2">
+                      {acc.avatarUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={acc.avatarUrl}
+                          alt=""
+                          className="h-6 w-6 rounded-full object-cover"
+                        />
+                      ) : (
+                        <span className="h-6 w-6 rounded-full bg-background" />
+                      )}
+                    </span>
+                  ) : (
+                    "—"
+                  )}
+                </Td>
+                <Td>
+                  <button
+                    type="button"
+                    onClick={() => onPick(p.id)}
+                    className="text-sm font-medium text-zalo hover:underline"
+                  >
+                    Chọn
+                  </button>
+                </Td>
+              </Tr>
+            );
+          })}
+          {(proxies ?? []).length === 0 && (
+            <TableEmpty colSpan={5}>
+              {loading
+                ? "Đang tải…"
+                : "Chưa có proxy nào — vào Quản lý proxy để thêm trước."}
+            </TableEmpty>
+          )}
+        </tbody>
+      </Table>
+
+      <div className="flex justify-end">
+        <Button variant="ghost" onClick={onClose}>
+          Hủy
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function ManualForm({
+  proxyId,
   submitLabel,
   onSwitchQr,
   onClose,
   onAdded,
 }: {
+  proxyId: number;
   submitLabel: string;
   onSwitchQr: () => void;
   onClose: () => void;
@@ -67,11 +186,16 @@ function ManualForm({
     if (!cookies.trim()) return setError("Nhập Cookies");
     setLinking(true);
     try {
-      await apiSend("/api/zalo/accounts/link", "POST", {
-        imei: imei.trim(),
-        cookies: cookies.trim(),
-        userAgent: ua.trim(),
-      });
+      const { zaloId } = await apiSend<{ zaloId: string }>(
+        "/api/zalo/accounts/link",
+        "POST",
+        {
+          imei: imei.trim(),
+          cookies: cookies.trim(),
+          userAgent: ua.trim(),
+        },
+      );
+      await apiSend(`/api/zalo/accounts/${zaloId}/proxy`, "PUT", { proxyId });
       onAdded();
       onClose();
     } catch (e) {
@@ -137,14 +261,31 @@ function ManualForm({
 }
 
 function QrForm({
+  proxyId,
   onSwitchManual,
   onClose,
   onAdded,
 }: {
+  proxyId: number;
   onSwitchManual: () => void;
   onClose: () => void;
   onAdded: () => void;
 }) {
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleConnected(zaloId?: string) {
+    if (zaloId) {
+      try {
+        await apiSend(`/api/zalo/accounts/${zaloId}/proxy`, "PUT", {
+          proxyId,
+        });
+      } catch (e) {
+        setError((e as Error).message);
+      }
+    }
+    onAdded();
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <button
@@ -153,7 +294,8 @@ function QrForm({
       >
         ← Nhập thủ công
       </button>
-      <QrLoginPanel onClose={onClose} onAdded={onAdded} />
+      {error && <Notice tone="error">{error}</Notice>}
+      <QrLoginPanel onClose={onClose} onAdded={handleConnected} />
     </div>
   );
 }

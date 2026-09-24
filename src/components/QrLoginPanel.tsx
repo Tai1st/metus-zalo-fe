@@ -26,7 +26,7 @@ export function QrLoginPanel({
   onAdded,
 }: {
   onClose: () => void;
-  onAdded: () => void;
+  onAdded: (zaloId?: string) => void;
 }) {
   const [session, setSession] = useState<QrSession | null>(null);
   const tempIdRef = useRef<string | null>(null);
@@ -73,7 +73,7 @@ export function QrLoginPanel({
         setSession(s);
         if (s.stage === "connected") {
           tempIdRef.current = null;
-          onAdded();
+          onAdded(s.zaloId);
         }
       } catch {
         /* session expired */

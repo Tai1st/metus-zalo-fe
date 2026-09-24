@@ -5,6 +5,7 @@ import type { LoginStage } from "@/lib/types";
 import { upsertAccount } from "./accounts";
 import { connectionManager, imageMetadataGetter } from "./connection-manager";
 import { be } from "./be-client";
+import { invalidateSessionUser } from "@/lib/auth";
 
 export const DEFAULT_USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36";
@@ -83,7 +84,7 @@ const SESSION_TTL_MS = 5 * 60 * 1000;
 class LoginController {
   private sessions = new Map<string, QrSession>();
 
-  start(grantToUserId?: string): string {
+  start(grantToUserId?: string, sessionToken?: string): string {
     this.sweep();
     const tempId = crypto.randomUUID();
     const session: QrSession = {
@@ -124,6 +125,9 @@ class LoginController {
           session.scannedUser,
           grantToUserId,
         );
+        // Vừa cấp quyền zaloId mới cho user — bỏ cache để lệnh gắn proxy
+        // ngay sau đó (từ FE, khi thấy stage "connected") thấy quyền mới.
+        if (grantToUserId) invalidateSessionUser(sessionToken);
         session.stage = "connected";
       })
       .catch((err: unknown) => {

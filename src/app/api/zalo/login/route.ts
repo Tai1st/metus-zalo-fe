@@ -7,9 +7,11 @@ export const dynamic = "force-dynamic";
 
 /** Start a QR login session. Returns a tempId to poll. */
 export async function POST(req: NextRequest) {
-  const user = await getSessionUser(req.cookies.get(SESSION_COOKIE)?.value);
+  const token = req.cookies.get(SESSION_COOKIE)?.value;
+  const user = await getSessionUser(token);
   const tempId = loginController.start(
     user && user.role !== "admin" ? user.id : undefined,
+    token,
   );
   return ok({ tempId });
 }

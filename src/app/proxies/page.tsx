@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useApi } from "@/hooks/useApi";
 import { apiSend } from "@/lib/fetcher";
 import { Icon } from "@/components/icons";
+import type { AccountPublic } from "@/lib/types";
 import {
   Badge,
   Button,
@@ -111,6 +112,14 @@ const empty = {
 
 export default function ProxiesPage() {
   const { data, loading, reload } = useApi<Proxy[]>("/api/zalo/proxies", 10000);
+  const { data: accounts } = useApi<AccountPublic[]>("/api/zalo/accounts", 10000);
+  const accountsByProxy = new Map<number, AccountPublic[]>();
+  for (const a of accounts ?? []) {
+    if (a.proxyId === null) continue;
+    const list = accountsByProxy.get(a.proxyId) ?? [];
+    list.push(a);
+    accountsByProxy.set(a.proxyId, list);
+  }
   const [editing, setEditing] = useState<Proxy | "new" | null>(null);
 
   async function remove(id: number) {
@@ -169,6 +178,7 @@ export default function ProxiesPage() {
             >
               Trạng thái
             </FilterTh>
+            <Th>Tài khoản Zalo</Th>
             <Th>Ngày tạo</Th>
             <Th>Thao tác</Th>
           </Thead>
@@ -188,6 +198,35 @@ export default function ProxiesPage() {
                   ) : (
                     <Badge tone="danger">Không hoạt động</Badge>
                   )}
+                </Td>
+                <Td>
+                  {(() => {
+                    const list = accountsByProxy.get(p.id) ?? [];
+                    if (list.length === 0) {
+                      return <span className="text-muted">—</span>;
+                    }
+                    return (
+                      <div className="flex flex-col gap-1">
+                        {list.map((a) => (
+                          <span key={a.zaloId} className="flex items-center gap-1.5">
+                            {a.avatarUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={a.avatarUrl}
+                                alt=""
+                                className="h-5 w-5 shrink-0 rounded-full object-cover"
+                              />
+                            ) : (
+                              <span className="h-5 w-5 shrink-0 rounded-full bg-background" />
+                            )}
+                            <span className="truncate">
+                              {a.fullName || a.phone || a.zaloId}
+                            </span>
+                          </span>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </Td>
                 <Td className="text-muted">
                   {new Date(p.createdAt).toLocaleString("vi-VN")}
@@ -211,7 +250,7 @@ export default function ProxiesPage() {
               </Tr>
             ))}
             {rows.length === 0 && (
-              <TableEmpty colSpan={7}>
+              <TableEmpty colSpan={8}>
                 {loading
                   ? "Đang tải…"
                   : (data ?? []).length === 0

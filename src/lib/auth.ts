@@ -114,6 +114,15 @@ export async function getSessionUser(
   return hit && Date.now() - hit.at < STALE_MS ? hit.user : null;
 }
 
+/**
+ * Xoá cache của một phiên — gọi ngay sau khi cấp quyền một zaloId mới cho
+ * người dùng, để lệnh gọi kế tiếp (vd. gắn proxy) đọc lại allowedZaloIds mới
+ * thay vì bản cache cũ (tối đa CACHE_MS) chưa có zaloId vừa cấp.
+ */
+export function invalidateSessionUser(token: string | undefined): void {
+  if (token) userCache.delete(token);
+}
+
 /** Vượt qua giới hạn tài khoản Zalo được gán (admin luôn qua). */
 export function canAccessZalo(user: SessionUser, zaloId: string): boolean {
   return user.role === "admin" || user.allowedZaloIds.includes(zaloId);

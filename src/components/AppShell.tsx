@@ -349,10 +349,10 @@ function HeaderUser() {
 function SidebarNav() {
   const pathname = usePathname();
   const search = useSearchParams().toString();
-  const { data } = useApi<{ role: string }>("/api/auth/me");
-  // Chỉ ẩn "Quản lý truy cập" khi đã BIẾT chắc là nhân sự — tránh nháy
+  const { data } = useApi<{ role: string; staffLimit: number }>("/api/auth/me");
+  // Chỉ ẩn "Quản lý truy cập" khi đã BIẾT chắc không có gói nhân sự (Business) — tránh nháy
   // menu đầy đủ→rút gọn khi đang tải; chặn thật vẫn ở proxy.ts.
-  const nav = filterNavForRole(NAV, !data || data.role !== "staff");
+  const nav = filterNavForRole(NAV, !data || (data.role !== "staff" && data.staffLimit > 0));
   return (
     <nav className="flex flex-col gap-0.5">
       {nav.map((item) => (

@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
       username: string;
       fullName: string;
       role: string;
+      staffLimit?: number;
     };
     return NextResponse.json({
       ok: true,
@@ -35,6 +36,7 @@ export async function GET(req: NextRequest) {
         username: u.username,
         fullName: u.fullName,
         role: u.role,
+        staffLimit: u.staffLimit ?? 0,
       },
     });
   } catch {

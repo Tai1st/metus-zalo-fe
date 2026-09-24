@@ -27,7 +27,7 @@ export async function proxy(req: NextRequest) {
   }
 
   if (
-    user.role === "staff" &&
+    (user.role === "staff" || !(user.staffLimit && user.staffLimit > 0)) &&
     OWNER_ONLY_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))
   ) {
     if (pathname.startsWith("/api/")) {

@@ -28,9 +28,13 @@ export async function GET(
   if (!anyZaloAllowed(user, campaign.accountIds)) {
     return fail("Không tìm thấy yêu cầu", 404); // 404, not 403 — don't reveal it exists
   }
+  const limitParam = Number(req.nextUrl.searchParams.get("limit"));
+  const limit = Number.isInteger(limitParam) && limitParam > 0
+    ? Math.min(limitParam, 2000)
+    : 200;
   return ok({
     campaign,
-    logs: await listLogs(campaign.id),
+    logs: await listLogs(campaign.id, limit),
     running: campaignRunner.isRunning(campaign.id),
   });
 }

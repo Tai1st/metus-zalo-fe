@@ -40,6 +40,7 @@ function NewScheduleForm() {
   const params = useSearchParams();
   const editId = params.get("id");
   const initialCategory = params.get("category");
+  const initialCampaignId = params.get("campaignId");
 
   const { data: campaigns } = useApi<Campaign[]>("/api/zalo/campaigns");
   const [tab, setTab] = useState<CampaignCategory>(
@@ -49,7 +50,7 @@ function NewScheduleForm() {
   );
   const [form, setForm] = useState({
     name: "",
-    campaignId: "",
+    campaignId: initialCampaignId ?? "",
     repeat: "daily" as ScheduleRepeat,
     timeOfDay: "00:00",
     timeOfDayEnd: "",
@@ -89,6 +90,15 @@ function NewScheduleForm() {
       alive = false;
     };
   }, [editId]);
+
+  useEffect(() => {
+    if (editId || !initialCampaignId || !campaigns) return;
+    const c = campaigns.find((x) => String(x.id) === initialCampaignId);
+    if (!c) return;
+    setTab(categoryOf(actionOf(c)));
+    setForm((f) => ({ ...f, name: f.name || c.name, campaignId: String(c.id) }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editId, initialCampaignId, campaigns]);
 
   async function save() {
     setError(null);

@@ -7,6 +7,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useApi } from "@/hooks/useApi";
 import { apiSend } from "@/lib/fetcher";
 import { Icon } from "@/components/icons";
+import { CampaignConfigModal } from "@/components/CampaignConfigModal";
+import { CampaignLogsModal } from "@/components/CampaignLogsModal";
 import {
   Badge,
   Button,
@@ -95,6 +97,8 @@ function CampaignsList() {
   );
 
   const [page, setPage] = useState(1);
+  const [viewing, setViewing] = useState<Campaign | null>(null);
+  const [configuring, setConfiguring] = useState<Campaign | null>(null);
   const [pageSize, setPageSize] = useState(20);
   const f = useColumnFilters<"name" | "status">();
   const rows = (data ?? []).filter(
@@ -269,7 +273,19 @@ function CampaignsList() {
                     <RowAction
                       icon="eye"
                       label="Xem"
-                      href={`/campaigns/${c.id}`}
+                      onClick={() => setViewing(c)}
+                    />
+                    <RowAction
+                      icon="settings"
+                      label="Cấu hình"
+                      onClick={() => setConfiguring(c)}
+                    />
+                    <RowAction
+                      icon="calendar"
+                      label="Đặt lịch chạy"
+                      onClick={() =>
+                        router.push(`/schedule/new?campaignId=${c.id}`)
+                      }
                     />
                     <RowAction
                       icon="trash"
@@ -304,6 +320,20 @@ function CampaignsList() {
           setPage(1);
         }}
       />
+
+      {viewing && (
+        <CampaignLogsModal
+          campaignId={viewing.id}
+          campaignName={viewing.name}
+          onClose={() => setViewing(null)}
+        />
+      )}
+      {configuring && (
+        <CampaignConfigModal
+          campaign={configuring}
+          onClose={() => setConfiguring(null)}
+        />
+      )}
     </div>
   );
 }

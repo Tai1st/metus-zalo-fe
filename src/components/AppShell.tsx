@@ -41,12 +41,10 @@ const NAV: Item[] = [
   {
     label: "Zalo",
     icon: "chat",
-    defaultOpen: true,
     children: [
       {
         label: "Tài khoản Zalo",
         icon: "user",
-        defaultOpen: true,
         children: [
           { label: "Danh sách tài khoản", href: "/accounts", icon: "list" },
           { label: "Quản lý truy cập", href: "/accounts/access", icon: "key" },
@@ -65,7 +63,6 @@ const NAV: Item[] = [
       {
         label: "Nhắn tin",
         icon: "send",
-        defaultOpen: true,
         children: [
           {
             label: "Theo số điện thoại",
@@ -92,7 +89,6 @@ const NAV: Item[] = [
       {
         label: "Kết bạn",
         icon: "userPlus",
-        defaultOpen: true,
         children: [
           {
             label: "Theo số điện thoại",
@@ -129,7 +125,6 @@ const NAV: Item[] = [
       {
         label: "Nhóm",
         icon: "users",
-        defaultOpen: true,
         children: [
           { label: "Danh sách nhóm", href: "/groups", icon: "list" },
           {

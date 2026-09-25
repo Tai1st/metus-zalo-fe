@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useApi } from "@/hooks/useApi";
 import { apiGet, apiSend } from "@/lib/fetcher";
+import { useConfirm } from "@/components/ConfirmDialog";
 import {
   Badge,
   Button,
@@ -42,6 +43,7 @@ export default function LeaveGroupsPage() {
 
   const acctF = useColumnFilters<"phone" | "name" | "label" | "status">();
   const [pickedAccounts, setPickedAccounts] = useState<Set<string>>(new Set());
+  const { confirm, dialog: confirmDialog } = useConfirm();
   const [acctPage, setAcctPage] = useState(1);
   const [acctPageSize, setAcctPageSize] = useState(10);
 
@@ -126,12 +128,11 @@ export default function LeaveGroupsPage() {
 
   async function run() {
     if (pickedGroups.size === 0) return;
-    if (
-      !confirm(
-        `Rời khỏi ${pickedGroups.size} nhóm đã chọn? Không thể hoàn tác — muốn vào lại phải được mời hoặc có link nhóm.`,
-      )
-    )
-      return;
+    const ok = await confirm(
+      `Rời khỏi ${pickedGroups.size} nhóm đã chọn? Không thể hoàn tác — muốn vào lại phải được mời hoặc có link nhóm.`,
+      { tone: "danger", confirmLabel: "Rời nhóm" },
+    );
+    if (!ok) return;
     setError(null);
     setRunning(true);
     setResults(null);
@@ -425,6 +426,7 @@ export default function LeaveGroupsPage() {
           </Table>
         </div>
       </Card>
+      {confirmDialog}
     </div>
   );
 }

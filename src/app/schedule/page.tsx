@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useApi } from "@/hooks/useApi";
 import { apiSend } from "@/lib/fetcher";
 import { Icon } from "@/components/icons";
+import { useConfirm } from "@/components/ConfirmDialog";
 import {
   Badge,
   Button,
@@ -43,6 +44,7 @@ export default function SchedulePage() {
     15000,
   );
   const [tab, setTab] = useState<CampaignCategory>("message");
+  const { confirm, dialog: confirmDialog } = useConfirm();
   const counts = (data ?? []).reduce(
     (acc, s) => {
       const c = categoryOf(s.campaignAction);
@@ -63,7 +65,10 @@ export default function SchedulePage() {
     reload();
   }
   async function runNow(s: Schedule) {
-    if (!confirm(`Chạy ngay yêu cầu “${s.campaignName}”?`)) return;
+    const ok = await confirm(`Chạy ngay yêu cầu "${s.campaignName}"?`, {
+      confirmLabel: "Chạy ngay",
+    });
+    if (!ok) return;
     try {
       await apiSend(`/api/zalo/schedules/${s.id}/run`, "POST");
       reload();
@@ -72,7 +77,11 @@ export default function SchedulePage() {
     }
   }
   async function remove(id: number) {
-    if (!confirm("Xoá lịch trình này?")) return;
+    const ok = await confirm("Xoá lịch trình này?", {
+      tone: "danger",
+      confirmLabel: "Xoá",
+    });
+    if (!ok) return;
     await apiSend(`/api/zalo/schedules/${id}`, "DELETE");
     reload();
   }
@@ -248,6 +257,7 @@ export default function SchedulePage() {
           />
         </div>
       </Card>
+      {confirmDialog}
     </div>
   );
 }

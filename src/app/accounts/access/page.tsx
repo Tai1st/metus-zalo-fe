@@ -5,6 +5,7 @@ import { useApi } from "@/hooks/useApi";
 import { apiSend } from "@/lib/fetcher";
 import { EmployeeModal, type Employee } from "@/components/EmployeeModal";
 import { ResetEmployeePasswordModal } from "@/components/ResetEmployeePasswordModal";
+import { useConfirm } from "@/components/ConfirmDialog";
 import {
   Badge,
   Button,
@@ -32,9 +33,14 @@ export default function AccessPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
   const [resetting, setResetting] = useState<Employee | null>(null);
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   async function remove(e: Employee) {
-    if (!confirm(`Xóa nhân sự "${e.username}"? Không thể hoàn tác.`)) return;
+    const ok = await confirm(`Xóa nhân sự "${e.username}"? Không thể hoàn tác.`, {
+      tone: "danger",
+      confirmLabel: "Xoá",
+    });
+    if (!ok) return;
     await apiSend(`/api/employees/${e.id}`, "DELETE");
     reload();
   }
@@ -142,6 +148,7 @@ export default function AccessPage() {
           onClose={() => setResetting(null)}
         />
       )}
+      {confirmDialog}
     </div>
   );
 }

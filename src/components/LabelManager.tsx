@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useApi } from "@/hooks/useApi";
 import { apiSend } from "@/lib/fetcher";
 import { Icon } from "@/components/icons";
+import { useConfirm } from "@/components/ConfirmDialog";
 import {
   Button,
   Card,
@@ -53,9 +54,11 @@ export function LabelManager({
 }) {
   const { data, loading, reload } = useApi<LabelRow[]>(endpoint, 8000);
   const [editing, setEditing] = useState<LabelRow | "new" | null>(null);
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   async function remove(id: number) {
-    if (!confirm("Xoá nhãn này?")) return;
+    const ok = await confirm("Xoá nhãn này?", { tone: "danger", confirmLabel: "Xoá" });
+    if (!ok) return;
     await apiSend(`${endpoint}/${id}`, "DELETE");
     reload();
   }
@@ -147,6 +150,7 @@ export function LabelManager({
           reload();
         }}
       />
+      {confirmDialog}
     </div>
   );
 }

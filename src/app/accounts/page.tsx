@@ -6,6 +6,7 @@ import { useApi } from "@/hooks/useApi";
 import { apiSend } from "@/lib/fetcher";
 import { AddAccountModal } from "@/components/AddAccountModal";
 import { ReloginModal } from "@/components/ReloginModal";
+import { useConfirm } from "@/components/ConfirmDialog";
 import { Icon } from "@/components/icons";
 import {
   Badge,
@@ -48,12 +49,17 @@ export default function AccountsPage() {
   const [proxyFor, setProxyFor] = useState<AccountPublic | null>(null);
   const [reloginFor, setReloginFor] = useState<AccountPublic | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   const labelById = new Map((labels ?? []).map((l) => [l.id, l]));
   const proxyById = new Map((proxies ?? []).map((p) => [p.id, p]));
 
   async function unlink(zaloId: string) {
-    if (!confirm("Gỡ liên kết tài khoản này khỏi Metus Zalo?")) return;
+    const ok = await confirm("Gỡ liên kết tài khoản này khỏi Metus Zalo?", {
+      tone: "danger",
+      confirmLabel: "Gỡ liên kết",
+    });
+    if (!ok) return;
     await apiSend(`/api/zalo/accounts/${zaloId}`, "DELETE");
     reload();
   }
@@ -278,6 +284,7 @@ export default function AccountsPage() {
           reload();
         }}
       />
+      {confirmDialog}
     </div>
   );
 }

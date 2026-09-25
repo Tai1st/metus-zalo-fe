@@ -282,7 +282,7 @@ export function RowAction({
     primary: "text-zalo",
     danger: "text-danger",
   } as const;
-  const cls = `inline-flex items-center gap-1 whitespace-nowrap text-xs hover:underline disabled:opacity-50 ${tones[tone]}`;
+  const cls = `inline-flex items-center gap-1 whitespace-nowrap text-xs disabled:opacity-50 ${tones[tone]}`;
   const inner = (
     <>
       <Icon name={icon} size={13} />

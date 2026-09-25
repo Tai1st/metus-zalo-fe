@@ -41,6 +41,13 @@ export async function POST(
       campaignRunner.stop(campaignId);
       await updateCampaignStatus(campaignId, "paused");
       return ok({ status: "paused" });
+    // Dừng hẳn: không giữ cờ "đang tạm dừng, chờ tiếp tục" — về "draft" để
+    // lần sau chạy lại người dùng tự chọn lại chế độ (tiếp tục/làm lại) như
+    // với một yêu cầu chưa từng chạy.
+    case "cancel":
+      campaignRunner.stop(campaignId);
+      await updateCampaignStatus(campaignId, "draft");
+      return ok({ status: "draft" });
     default:
       return fail("Hành động không hợp lệ");
   }

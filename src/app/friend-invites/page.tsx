@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useApi } from "@/hooks/useApi";
 import { apiSend } from "@/lib/fetcher";
 import { Icon } from "@/components/icons";
+import { useConfirm } from "@/components/ConfirmDialog";
 import {
   Badge,
   Button,
@@ -47,6 +48,7 @@ export default function FriendInvitesPage() {
   const [busyId, setBusyId] = useState<number | null>(null);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [checked, setChecked] = useState<Set<number>>(new Set());
+  const { confirm, dialog: confirmDialog } = useConfirm();
   const [error, setError] = useState<string | null>(null);
 
   const {
@@ -126,8 +128,11 @@ export default function FriendInvitesPage() {
     const ids = [...checked];
     if (ids.length === 0) return;
     const label = action === "accept" ? "đồng ý" : "từ chối";
-    if (!confirm(`${label[0].toUpperCase()}${label.slice(1)} ${ids.length} lời mời đã chọn?`))
-      return;
+    const ok = await confirm(
+      `${label[0].toUpperCase()}${label.slice(1)} ${ids.length} lời mời đã chọn?`,
+      { confirmLabel: label[0].toUpperCase() + label.slice(1) },
+    );
+    if (!ok) return;
     setError(null);
     setBulkBusy(true);
     const failed: string[] = [];
@@ -387,6 +392,7 @@ export default function FriendInvitesPage() {
           )}
         </Card>
       </div>
+      {confirmDialog}
     </div>
   );
 }

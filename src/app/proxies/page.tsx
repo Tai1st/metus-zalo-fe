@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useApi } from "@/hooks/useApi";
 import { apiSend } from "@/lib/fetcher";
 import { Icon } from "@/components/icons";
+import { useConfirm } from "@/components/ConfirmDialog";
 import type { AccountPublic } from "@/lib/types";
 import {
   Badge,
@@ -121,9 +122,11 @@ export default function ProxiesPage() {
     accountsByProxy.set(a.proxyId, list);
   }
   const [editing, setEditing] = useState<Proxy | "new" | null>(null);
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   async function remove(id: number) {
-    if (!confirm("Xoá proxy này?")) return;
+    const ok = await confirm("Xoá proxy này?", { tone: "danger", confirmLabel: "Xoá" });
+    if (!ok) return;
     await apiSend(`/api/zalo/proxies/${id}`, "DELETE");
     reload();
   }
@@ -275,6 +278,7 @@ export default function ProxiesPage() {
           reload();
         }}
       />
+      {confirmDialog}
     </div>
   );
 }

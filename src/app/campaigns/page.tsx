@@ -5,10 +5,13 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useApi } from "@/hooks/useApi";
+import type { AccountPublic } from "@/lib/types";
 import { apiSend } from "@/lib/fetcher";
 import { Icon } from "@/components/icons";
 import { CampaignConfigModal } from "@/components/CampaignConfigModal";
+import { CampaignScheduleModal } from "@/components/CampaignScheduleModal";
 import { CampaignLogsModal } from "@/components/CampaignLogsModal";
+import { useConfirm } from "@/components/ConfirmDialog";
 import {
   Badge,
   Button,
@@ -95,10 +98,14 @@ function CampaignsList() {
     "/api/zalo/campaigns",
     5000,
   );
+  const { data: accountsList } = useApi<AccountPublic[]>("/api/zalo/accounts");
+  const accountsById = new Map((accountsList ?? []).map((a) => [a.zaloId, a]));
 
   const [page, setPage] = useState(1);
   const [viewing, setViewing] = useState<Campaign | null>(null);
   const [configuring, setConfiguring] = useState<Campaign | null>(null);
+  const [scheduling, setScheduling] = useState<Campaign | null>(null);
+  const { confirm, dialog: confirmDialog } = useConfirm();
   const [pageSize, setPageSize] = useState(20);
   const f = useColumnFilters<"name" | "status">();
   const rows = (data ?? []).filter(
@@ -128,8 +135,23 @@ function CampaignsList() {
     });
     reload();
   }
+  async function cancel(id: number) {
+    const ok = await confirm(
+      "Dừng hẳn yêu cầu này? Lần chạy sau sẽ chọn lại chế độ như một yêu cầu mới.",
+      { tone: "danger", confirmLabel: "Dừng" },
+    );
+    if (!ok) return;
+    await apiSend(`/api/zalo/campaigns/${id}/actions`, "POST", {
+      action: "cancel",
+    });
+    reload();
+  }
   async function remove(id: number) {
-    if (!confirm("Xoá yêu cầu này?")) return;
+    const ok = await confirm("Xoá yêu cầu này?", {
+      tone: "danger",
+      confirmLabel: "Xoá",
+    });
+    if (!ok) return;
     await apiSend(`/api/zalo/campaigns/${id}`, "DELETE");
     reload();
   }
@@ -190,6 +212,7 @@ function CampaignsList() {
               Tên yêu cầu
             </FilterTh>
             {isMessage && <Th>Ảnh / Video</Th>}
+            <Th>Tài khoản</Th>
             <Th>Số lượng</Th>
             <Th>Thành công</Th>
             <Th>Thất bại</Th>
@@ -234,6 +257,38 @@ function CampaignsList() {
                     )}
                   </Td>
                 )}
+                <Td>
+                  {c.accountIds.length === 0 ? (
+                    <span className="text-muted">—</span>
+                  ) : (
+                    <span className="flex items-center -space-x-2">
+                      {c.accountIds.slice(0, 3).map((id) => {
+                        const acc = accountsById.get(id);
+                        return acc?.avatarUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            key={id}
+                            src={acc.avatarUrl}
+                            alt={acc.fullName || id}
+                            title={acc.fullName || id}
+                            className="h-6 w-6 rounded-full border-2 border-surface object-cover"
+                          />
+                        ) : (
+                          <span
+                            key={id}
+                            title={acc?.fullName || id}
+                            className="h-6 w-6 rounded-full border-2 border-surface bg-background"
+                          />
+                        );
+                      })}
+                      {c.accountIds.length > 3 && (
+                        <span className="z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 border-surface bg-background text-[10px] text-muted">
+                          +{c.accountIds.length - 3}
+                        </span>
+                      )}
+                    </span>
+                  )}
+                </Td>
                 <Td>{c.targets.length}</Td>
                 <Td className="text-success">{c.sentOk}</Td>
                 <Td className="text-danger">{c.sentFail}</Td>
@@ -248,11 +303,19 @@ function CampaignsList() {
                 <Td>
                   <RowActions>
                     {c.status === "running" ? (
-                      <RowAction
-                        icon="pause"
-                        label="Dừng"
-                        onClick={() => stop(c.id)}
-                      />
+                      <>
+                        <RowAction
+                          icon="pause"
+                          label="Tạm dừng"
+                          onClick={() => stop(c.id)}
+                        />
+                        <RowAction
+                          icon="ban"
+                          label="Dừng"
+                          tone="danger"
+                          onClick={() => cancel(c.id)}
+                        />
+                      </>
                     ) : (
                       <RunMenu onPick={(m) => start(c.id, m)} />
                     )}
@@ -271,6 +334,11 @@ function CampaignsList() {
                       onClick={() => duplicate(c)}
                     />
                     <RowAction
+                      icon="calendar"
+                      label="Đặt lịch chạy"
+                      onClick={() => setScheduling(c)}
+                    />
+                    <RowAction
                       icon="eye"
                       label="Xem"
                       onClick={() => setViewing(c)}
@@ -279,13 +347,6 @@ function CampaignsList() {
                       icon="settings"
                       label="Cấu hình"
                       onClick={() => setConfiguring(c)}
-                    />
-                    <RowAction
-                      icon="calendar"
-                      label="Đặt lịch chạy"
-                      onClick={() =>
-                        router.push(`/schedule/new?campaignId=${c.id}`)
-                      }
                     />
                     <RowAction
                       icon="trash"
@@ -298,7 +359,7 @@ function CampaignsList() {
               </Tr>
             ))}
             {rows.length === 0 && (
-              <TableEmpty colSpan={isMessage ? 9 : 8}>
+              <TableEmpty colSpan={isMessage ? 10 : 9}>
                 {loading
                   ? "Đang tải…"
                   : (data ?? []).length === 0
@@ -334,6 +395,17 @@ function CampaignsList() {
           onClose={() => setConfiguring(null)}
         />
       )}
+      {scheduling && (
+        <CampaignScheduleModal
+          campaign={scheduling}
+          onClose={() => setScheduling(null)}
+          onDone={() => {
+            setScheduling(null);
+            router.push("/schedule");
+          }}
+        />
+      )}
+      {confirmDialog}
     </div>
   );
 }
@@ -343,7 +415,8 @@ const RUN_MODES: RunMode[] = ["resume_retry_failed", "resume", "restart"];
 function RunMenu({ onPick }: { onPick: (mode: RunMode) => void }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
-  const anchorRef = useRef<HTMLButtonElement>(null);
+  const anchorRef = useRef<HTMLSpanElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useLayoutEffect(() => {
     if (!open || !anchorRef.current) return;
@@ -351,49 +424,59 @@ function RunMenu({ onPick }: { onPick: (mode: RunMode) => void }) {
     setPos({ top: r.bottom + 4, left: r.left });
   }, [open]);
 
+  function openNow() {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+    setOpen(true);
+  }
+  // Trễ một chút trước khi đóng — menu render qua portal (không nằm trong
+  // cây DOM của nút), nên di chuột từ nút xuống menu sẽ tính là "rời khỏi"
+  // nút nếu đóng ngay; trễ để kịp sang tới menu (menu tự huỷ trễ khi vào lại).
+  function closeSoon() {
+    closeTimer.current = setTimeout(() => setOpen(false), 150);
+  }
+
   return (
-    <span className="inline-flex items-center gap-0.5">
+    <span
+      ref={anchorRef}
+      className="inline-flex items-center gap-0.5"
+      onMouseEnter={openNow}
+      onMouseLeave={closeSoon}
+    >
       <button
-        className="inline-flex items-center gap-1 whitespace-nowrap text-xs text-zalo hover:underline"
+        className="inline-flex items-center gap-1 whitespace-nowrap text-xs text-zalo"
         onClick={() => onPick("resume_retry_failed")}
       >
         <Icon name="play" size={13} />
         Bắt đầu
       </button>
-      <button
-        ref={anchorRef}
-        className="text-zalo hover:bg-background"
-        onClick={() => setOpen((v) => !v)}
-        aria-label="Chế độ chạy"
-      >
+      <span className="text-zalo">
         <Icon name="chevronDown" size={13} />
-      </button>
+      </span>
       {open &&
         pos &&
         createPortal(
-          <>
-            <div
-              className="fixed inset-0 z-40"
-              onClick={() => setOpen(false)}
-            />
-            <div
-              className="fixed z-50 w-56 rounded-lg border border-border bg-surface py-1 text-xs shadow-lg"
-              style={{ top: pos.top, left: pos.left }}
-            >
-              {RUN_MODES.map((m) => (
-                <button
-                  key={m}
-                  className="block w-full px-3 py-1.5 text-left hover:bg-background"
-                  onClick={() => {
-                    setOpen(false);
-                    onPick(m);
-                  }}
-                >
-                  {RUN_MODE_LABEL[m]}
-                </button>
-              ))}
-            </div>
-          </>,
+          <div
+            className="fixed z-50 w-56 rounded-lg border border-border bg-surface py-1 text-xs shadow-lg"
+            style={{ top: pos.top, left: pos.left }}
+            onMouseEnter={openNow}
+            onMouseLeave={closeSoon}
+          >
+            {RUN_MODES.map((m) => (
+              <button
+                key={m}
+                className="block w-full px-3 py-1.5 text-left hover:bg-background"
+                onClick={() => {
+                  setOpen(false);
+                  onPick(m);
+                }}
+              >
+                {RUN_MODE_LABEL[m]}
+              </button>
+            ))}
+          </div>,
           document.body,
         )}
     </span>

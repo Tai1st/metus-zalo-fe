@@ -1388,12 +1388,12 @@ function NewCampaignForm() {
               {(kind === "group_member" ||
                 kind === "group" ||
                 (isInvite && kind === "group_link")) && (
-                <Button size="sm" onClick={loadGroups} disabled={groupsLoading}>
+                <Button size="sm" onClick={() => loadGroups()} disabled={groupsLoading}>
                   {groupsLoading ? "Đang tải…" : "Tải nhóm"}
                 </Button>
               )}
               {isInvite && (kind === "phone" || kind === "friend") && (
-                <Button size="sm" onClick={loadGroups} disabled={groupsLoading}>
+                <Button size="sm" onClick={() => loadGroups()} disabled={groupsLoading}>
                   {groupsLoading ? "Đang tải…" : "Tải nhóm đích"}
                 </Button>
               )}

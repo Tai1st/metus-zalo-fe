@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { fail, ok } from "@/server/zalo/http";
 import { getSessionFor } from "@/server/zalo/accounts";
+import { SESSION_COOKIE, canAccessZalo, getSessionUser } from "@/lib/auth";
 import type { GroupMember } from "@/server/zalo/group-roster";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +30,12 @@ export async function GET(req: NextRequest) {
   if (!zaloId) return fail("Thiếu tham số account");
   if (!link) return fail("Thiếu link nhóm");
   const join = req.nextUrl.searchParams.get("join") === "1";
+
+  const user = await getSessionUser(req.cookies.get(SESSION_COOKIE)?.value);
+  if (!user) return fail("Chưa đăng nhập", 401);
+  if (!canAccessZalo(user, zaloId)) {
+    return fail("Không tìm thấy tài khoản", 404);
+  }
 
   const base = process.env.ZALO_BE_URL;
   const key = process.env.ZALO_BE_KEY;

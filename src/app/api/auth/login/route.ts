@@ -59,6 +59,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Tài khoản quản trị chỉ đăng nhập ở trang admin riêng, không dùng ở đây.
+  if (data.user.role === "admin") {
+    return fail("Tên đăng nhập hoặc mật khẩu không đúng", 401);
+  }
+
   const exp = tokenExpiry(data.accessToken);
   const maxAge = exp
     ? Math.max(60, exp - Math.floor(Date.now() / 1000))

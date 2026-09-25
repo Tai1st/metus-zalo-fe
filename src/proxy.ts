@@ -17,7 +17,9 @@ export async function proxy(req: NextRequest) {
   if (PUBLIC.includes(pathname)) return NextResponse.next();
 
   const user = await getSessionUser(req.cookies.get(SESSION_COOKIE)?.value);
-  if (!user) {
+  // Tài khoản quản trị chỉ dùng ở trang admin riêng — một phiên admin cũ
+  // (đăng nhập trước khi chặn này có) không được coi là đã đăng nhập ở đây.
+  if (!user || user.role === "admin") {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ ok: false, error: "Chưa đăng nhập" }, { status: 401 });
     }

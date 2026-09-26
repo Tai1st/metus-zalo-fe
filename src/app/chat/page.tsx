@@ -21,6 +21,14 @@ type Thread = {
 };
 
 /** Compact relative time for the conversation list (like a normal chat app). */
+function linkHost(href: string): string {
+  try {
+    return new URL(href).hostname.replace(/^www\./, "");
+  } catch {
+    return href;
+  }
+}
+
 function relativeTime(ts: number): string {
   if (!ts) return "";
   const diffMs = Date.now() - ts;
@@ -609,15 +617,33 @@ function ThreadView({
                             href={m.attachment.href}
                             target="_blank"
                             rel="noreferrer"
-                            className={`flex items-center gap-2 rounded-lg border px-2 py-1.5 ${
+                            className={`flex max-w-[260px] items-center gap-2 rounded-lg border px-2 py-1.5 ${
                               m.isSelf
                                 ? "border-white/30"
                                 : "border-border bg-background"
                             }`}
                           >
-                            <Icon name="link" size={14} />
-                            <span className="truncate text-xs underline">
-                              {m.attachment.title || "Tệp đính kèm"}
+                            {m.attachment.thumb ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={m.attachment.thumb}
+                                alt=""
+                                className="h-9 w-9 shrink-0 rounded-full object-cover"
+                              />
+                            ) : (
+                              <Icon name="link" size={14} className="shrink-0" />
+                            )}
+                            <span className="min-w-0">
+                              <span className="block truncate text-xs font-semibold">
+                                {m.attachment.title || "Tệp đính kèm"}
+                              </span>
+                              <span
+                                className={`block truncate text-[10px] ${
+                                  m.isSelf ? "text-white/70" : "text-muted"
+                                }`}
+                              >
+                                {linkHost(m.attachment.href)}
+                              </span>
                             </span>
                           </a>
                         ))}
